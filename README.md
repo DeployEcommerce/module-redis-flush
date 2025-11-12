@@ -10,9 +10,8 @@ adds a button to the Cache Management page that triggers a complete Redis flush 
 
 ## Requirements
 
-- Magento 2.x
+- Magento 2.4.x
 - Redis configured as cache backend
-- Cm_Cache_Backend_Redis library
 
 ## Installation
 
