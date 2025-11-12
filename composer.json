@@ -1,0 +1,21 @@
+{
+  "name": "deployecommerce/module-redis-flush",
+  "version": "0.0.1",
+  "description": "Adds a Flush Redis button to Cache Management page",
+  "type": "magento2-module",
+  "require": {
+    "magento/framework": "*",
+    "magento/module-backend": "*"
+  },
+  "license": [
+    "MIT"
+  ],
+  "autoload": {
+    "files": [
+      "registration.php"
+    ],
+    "psr-4": {
+      "DeployEcommerce\\RedisFlush\\": ""
+    }
+  }
+}
