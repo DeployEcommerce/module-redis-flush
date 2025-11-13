@@ -1,10 +1,15 @@
 <?php
 /**
- * Copyright © Deploy Ecommerce All rights reserved.
- *
+ * Copyright © Deploy Ecommerce. All rights reserved.
+ * See LICENSE.txt for license details.
  */
-\Magento\Framework\Component\ComponentRegistrar::register(
-    \Magento\Framework\Component\ComponentRegistrar::MODULE,
+
+declare(strict_types=1);
+
+use Magento\Framework\Component\ComponentRegistrar;
+
+ComponentRegistrar::register(
+    ComponentRegistrar::MODULE,
     'DeployEcommerce_RedisFlush',
     __DIR__
 );

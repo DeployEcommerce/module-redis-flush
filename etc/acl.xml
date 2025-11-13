@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <!--
 /**
- * Copyright © Deploy Ecommerce All rights reserved.
- *
+ * Copyright © Deploy Ecommerce. All rights reserved.
+ * See LICENSE.txt for license details.
  */
 -->
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -11,9 +11,11 @@
         <resources>
             <resource id="Magento_Backend::admin">
                 <resource id="Magento_Backend::system">
-                    <resource id="DeployEcommerce_RedisFlush::flush_redis"
-                              title="Flush Redis"
-                              sortOrder="10"/>
+                    <resource id="DeployEcommerce_RedisFlush::config" title="Redis Cache Manager" sortOrder="100">
+                        <resource id="DeployEcommerce_RedisFlush::flush_redis"
+                                  title="Flush Redis Cache"
+                                  sortOrder="10"/>
+                    </resource>
                 </resource>
             </resource>
         </resources>
