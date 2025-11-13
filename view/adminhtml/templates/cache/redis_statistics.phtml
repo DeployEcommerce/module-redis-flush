@@ -1,0 +1,316 @@
+<?php
+/**
+ * Copyright © Deploy Ecommerce. All rights reserved.
+ * See LICENSE.txt for license details.
+ *
+ * @var $block \Deploy\RedisCacheManager\Block\Adminhtml\Cache\RedisStatistics
+ */
+
+$statistics = $block->getStatistics();
+?>
+
+<div class="redis-statistics-container" id="redis-statistics">
+    <?php if (!$block->isRedisAvailable()): ?>
+        <div class="message message-warning warning">
+            <span><?= $block->escapeHtml(__('Redis is not configured or not available. Please check your configuration.')) ?></span>
+        </div>
+    <?php else: ?>
+        <div class="admin__page-section-title">
+            <span class="title"><?= $block->escapeHtml(__('Redis Cache Statistics')) ?></span>
+            <span class="redis-stats-timestamp">
+                <?= $block->escapeHtml(__('Last Updated: %1', $statistics->collectedAt->format('Y-m-d H:i:s'))) ?>
+            </span>
+        </div>
+
+        <div class="redis-statistics-grid">
+            <!-- Memory Usage Section -->
+            <div class="redis-stat-card redis-memory-card">
+                <h3 class="redis-stat-title"><?= $block->escapeHtml(__('Memory Usage')) ?></h3>
+                <div class="redis-stat-content">
+                    <div class="redis-memory-primary">
+                        <span class="redis-memory-value"><?= $block->escapeHtml($block->formatMemory($statistics->usedMemoryMb)) ?></span>
+                        <?php if ($statistics->maxMemoryMb !== null): ?>
+                            <span class="redis-memory-max"><?= $block->escapeHtml(__('of %1', $block->formatMemory($statistics->maxMemoryMb))) ?></span>
+                        <?php else: ?>
+                            <span class="redis-memory-max"><?= $block->escapeHtml(__('(unlimited)')) ?></span>
+                        <?php endif; ?>
+                    </div>
+
+                    <?php if ($statistics->maxMemoryMb !== null): ?>
+                        <div class="redis-memory-bar-container">
+                            <div class="redis-memory-bar <?= $block->escapeHtmlAttr($block->getMemoryBarColorClass($statistics->getMemoryUsagePercentage())) ?>"
+                                 style="width: <?= $block->escapeHtmlAttr((string)$block->getMemoryBarWidth($statistics->getMemoryUsagePercentage())) ?>%">
+                            </div>
+                        </div>
+                        <div class="redis-memory-percentage">
+                            <?= $block->escapeHtml(sprintf('%.1f%%', $statistics->getMemoryUsagePercentage())) ?>
+                        </div>
+                    <?php endif; ?>
+
+                    <div class="redis-memory-details">
+                        <div class="redis-memory-detail-item">
+                            <span class="label"><?= $block->escapeHtml(__('Peak:')) ?></span>
+                            <span class="value"><?= $block->escapeHtml($block->formatMemory($statistics->usedMemoryPeakMb)) ?></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Connection Info Section -->
+            <div class="redis-stat-card redis-connection-card">
+                <h3 class="redis-stat-title"><?= $block->escapeHtml(__('Connection Info')) ?></h3>
+                <div class="redis-stat-content">
+                    <div class="redis-info-item">
+                        <span class="label"><?= $block->escapeHtml(__('Status:')) ?></span>
+                        <span class="value redis-status-connected">
+                            <span class="redis-status-indicator"></span>
+                            <?= $block->escapeHtml(__('Connected')) ?>
+                        </span>
+                    </div>
+                    <div class="redis-info-item">
+                        <span class="label"><?= $block->escapeHtml(__('Version:')) ?></span>
+                        <span class="value"><?= $block->escapeHtml($statistics->redisVersion) ?></span>
+                    </div>
+                    <div class="redis-info-item">
+                        <span class="label"><?= $block->escapeHtml(__('Connected Clients:')) ?></span>
+                        <span class="value"><?= $block->escapeHtml((string)$statistics->connectedClients) ?></span>
+                    </div>
+                    <div class="redis-info-item">
+                        <span class="label"><?= $block->escapeHtml(__('Uptime:')) ?></span>
+                        <span class="value"><?= $block->escapeHtml($statistics->getUptimeFormatted()) ?></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Keyspace Info Section -->
+            <div class="redis-stat-card redis-keyspace-card">
+                <h3 class="redis-stat-title"><?= $block->escapeHtml(__('Keyspace Information')) ?></h3>
+                <div class="redis-stat-content">
+                    <?php if (empty($statistics->keyspaceInfo)): ?>
+                        <p class="redis-no-data"><?= $block->escapeHtml(__('No keys found in Redis databases.')) ?></p>
+                    <?php else: ?>
+                        <table class="redis-keyspace-table">
+                            <thead>
+                                <tr>
+                                    <th><?= $block->escapeHtml(__('Database')) ?></th>
+                                    <th><?= $block->escapeHtml(__('Keys')) ?></th>
+                                    <th><?= $block->escapeHtml(__('Expires')) ?></th>
+                                    <th><?= $block->escapeHtml(__('Avg TTL')) ?></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($statistics->keyspaceInfo as $keyspace): ?>
+                                    <tr>
+                                        <td class="redis-db-number">db<?= $block->escapeHtml((string)$keyspace->database) ?></td>
+                                        <td><?= $block->escapeHtml($block->formatNumber($keyspace->keys)) ?></td>
+                                        <td><?= $block->escapeHtml($block->formatNumber($keyspace->expires)) ?></td>
+                                        <td><?= $block->escapeHtml($keyspace->getAvgTtlFormatted()) ?></td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                            <tfoot>
+                                <tr class="redis-keyspace-total">
+                                    <td><strong><?= $block->escapeHtml(__('Total')) ?></strong></td>
+                                    <td><strong><?= $block->escapeHtml($block->formatNumber($statistics->getTotalKeys())) ?></strong></td>
+                                    <td><strong><?= $block->escapeHtml($block->formatNumber($statistics->getTotalExpires())) ?></strong></td>
+                                    <td>-</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+    <?php endif; ?>
+</div>
+
+<style>
+.redis-statistics-container {
+    margin: 20px 0;
+    padding: 20px;
+    background: #fff;
+    border: 1px solid #ddd;
+}
+
+.redis-statistics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    margin-top: 15px;
+}
+
+.redis-stat-card {
+    border: 1px solid #e3e3e3;
+    border-radius: 3px;
+    padding: 15px;
+    background: #fafafa;
+}
+
+.redis-stat-title {
+    margin: 0 0 15px 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+    border-bottom: 2px solid #e3e3e3;
+    padding-bottom: 10px;
+}
+
+.redis-stat-content {
+    font-size: 14px;
+}
+
+/* Memory Usage Styles */
+.redis-memory-primary {
+    margin-bottom: 10px;
+}
+
+.redis-memory-value {
+    font-size: 24px;
+    font-weight: 600;
+    color: #006bb4;
+}
+
+.redis-memory-max {
+    font-size: 14px;
+    color: #666;
+    margin-left: 5px;
+}
+
+.redis-memory-bar-container {
+    width: 100%;
+    height: 20px;
+    background: #e3e3e3;
+    border-radius: 3px;
+    overflow: hidden;
+    margin: 10px 0 5px 0;
+}
+
+.redis-memory-bar {
+    height: 100%;
+    transition: width 0.3s ease;
+}
+
+.redis-memory-bar.memory-bar-normal {
+    background: linear-gradient(90deg, #4CAF50, #66BB6A);
+}
+
+.redis-memory-bar.memory-bar-warning {
+    background: linear-gradient(90deg, #FF9800, #FFB74D);
+}
+
+.redis-memory-bar.memory-bar-critical {
+    background: linear-gradient(90deg, #F44336, #E57373);
+}
+
+.redis-memory-percentage {
+    text-align: right;
+    font-size: 13px;
+    color: #666;
+    font-weight: 600;
+}
+
+.redis-memory-details {
+    margin-top: 15px;
+    padding-top: 10px;
+    border-top: 1px solid #e3e3e3;
+}
+
+.redis-memory-detail-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 5px;
+}
+
+/* Connection Info Styles */
+.redis-info-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #e3e3e3;
+}
+
+.redis-info-item:last-child {
+    border-bottom: none;
+}
+
+.redis-info-item .label {
+    color: #666;
+    font-weight: 500;
+}
+
+.redis-info-item .value {
+    color: #333;
+    font-weight: 600;
+}
+
+.redis-status-connected {
+    color: #4CAF50 !important;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.redis-status-indicator {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    background: #4CAF50;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* Keyspace Table Styles */
+.redis-keyspace-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.redis-keyspace-table th {
+    background: #f0f0f0;
+    padding: 8px;
+    text-align: left;
+    font-weight: 600;
+    border-bottom: 2px solid #ddd;
+}
+
+.redis-keyspace-table td {
+    padding: 8px;
+    border-bottom: 1px solid #e3e3e3;
+}
+
+.redis-keyspace-table tbody tr:hover {
+    background: #f9f9f9;
+}
+
+.redis-db-number {
+    font-family: monospace;
+    font-weight: 600;
+    color: #006bb4;
+}
+
+.redis-keyspace-total td {
+    background: #f0f0f0;
+    padding-top: 10px !important;
+    border-top: 2px solid #ddd;
+    border-bottom: none !important;
+}
+
+.redis-no-data {
+    color: #666;
+    font-style: italic;
+    text-align: center;
+    padding: 20px 0;
+}
+
+.redis-stats-timestamp {
+    float: right;
+    font-size: 13px;
+    color: #666;
+    font-weight: normal;
+}
+</style>

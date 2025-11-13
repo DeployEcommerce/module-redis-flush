@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Copyright © Deploy Ecommerce. All rights reserved.
+ * See LICENSE.txt for license details.
+ */
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+
+    <!-- Service Layer - All services are singletons for performance -->
+    <type name="DeployEcommerce\RedisFlush\Service\RedisConnectionService">
+        <arguments>
+            <argument name="cacheFrontendPool" xsi:type="object">Magento\Framework\App\Cache\Frontend\Pool</argument>
+            <argument name="logger" xsi:type="object">Psr\Log\LoggerInterface</argument>
+        </arguments>
+    </type>
+
+    <type name="DeployEcommerce\RedisFlush\Service\RedisStatisticsService">
+        <arguments>
+            <argument name="redisConnectionService" xsi:type="object">DeployEcommerce\RedisFlush\Service\RedisConnectionService</argument>
+            <argument name="logger" xsi:type="object">Psr\Log\LoggerInterface</argument>
+        </arguments>
+    </type>
+
+    <type name="DeployEcommerce\RedisFlush\Service\RedisCacheFlushService">
+        <arguments>
+            <argument name="redisConnectionService" xsi:type="object">DeployEcommerce\RedisFlush\Service\RedisConnectionService</argument>
+            <argument name="redisStatisticsService" xsi:type="object">DeployEcommerce\RedisFlush\Service\RedisStatisticsService</argument>
+            <argument name="eventManager" xsi:type="object">Magento\Framework\Event\ManagerInterface</argument>
+            <argument name="logger" xsi:type="object">Psr\Log\LoggerInterface</argument>
+        </arguments>
+    </type>
+</config>

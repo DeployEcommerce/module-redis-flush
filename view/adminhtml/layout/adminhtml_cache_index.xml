@@ -1,16 +1,26 @@
 <?xml version="1.0"?>
 <!--
 /**
- * Copyright © Deploy Ecommerce All rights reserved.
- *
+ * Copyright © Deploy Ecommerce. All rights reserved.
+ * See LICENSE.txt for license details.
  */
 -->
 <page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
       xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
     <body>
+        <!-- Add Redis Statistics block before the cache management grid -->
+        <referenceContainer name="content">
+            <block class="DeployEcommerce\RedisFlush\Block\Adminhtml\Cache\RedisStatistics"
+                   name="redis.statistics"
+                   before="-"
+                   template="DeployEcommerce_RedisFlush::cache/redis_statistics.phtml"/>
+        </referenceContainer>
+
+        <!-- Add Flush Redis button to the page actions toolbar -->
         <referenceContainer name="page.actions.toolbar">
             <block class="DeployEcommerce\RedisFlush\Block\Adminhtml\Cache\FlushButton"
-                   name="redisflush.button"/>
+                   name="cache.flush.redis"
+                   before="-"/>
         </referenceContainer>
     </body>
 </page>
