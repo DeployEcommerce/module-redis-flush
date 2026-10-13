@@ -1,6 +1,6 @@
 {
   "name": "deployecommerce/module-redis-flush",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Provides the ability to flush Redis via the Cache Management page and provide statistics of Redis consumption.",
   "type": "magento2-module",
   "require": {

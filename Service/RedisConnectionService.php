@@ -144,7 +144,6 @@ class RedisConnectionService
                 // The property is named 'remote', not 'remoteBackend'
                 if ($reflection->hasProperty('remote')) {
                     $remoteBackendProperty = $reflection->getProperty('remote');
-                    $remoteBackendProperty->setAccessible(true);
                     $backend = $remoteBackendProperty->getValue($backend);
                 }
             } catch (ReflectionException $e) {
@@ -191,7 +190,6 @@ class RedisConnectionService
             foreach (['_redis', 'redis', '_client', 'client'] as $propertyName) {
                 if ($reflection->hasProperty($propertyName)) {
                     $property = $reflection->getProperty($propertyName);
-                    $property->setAccessible(true);
                     $client = $property->getValue($backend);
 
                     if ($client instanceof Redis || $client instanceof Credis_Client) {
