@@ -13,6 +13,8 @@ use Credis_Client;
 use Magento\Framework\App\Cache\Frontend\Pool as CacheFrontendPool;
 use Magento\Framework\Cache\Backend\Redis as MagentoRedis;
 use Magento\Framework\Cache\Backend\RemoteSynchronizedCache;
+use Magento\Framework\Cache\Backend\SymfonyL2Cache;
+use Magento\Framework\Cache\Frontend\Adapter\Symfony\BackendWrapper;
 use Magento\Framework\Cache\FrontendInterface;
 use Psr\Log\LoggerInterface;
 use Redis;
@@ -130,33 +132,65 @@ class RedisConnectionService
     /**
      * Resolve the actual Redis backend from wrapped backends
      *
-     * Handles RemoteSynchronizedCache which wraps the actual Redis backend
+     * Handles the Zend-based backends used up to Magento 2.4.8 (RemoteSynchronizedCache wrapping
+     * a Cm/Magento Redis backend) and the Symfony-based cache introduced in 2.4.9, where
+     * getBackend() returns a BackendWrapper around a tag adapter that holds the Redis client,
+     * optionally behind a SymfonyL2Cache whose remote side is itself a cache frontend.
      *
      * @param object $backend
      * @return object|null
      */
     private function resolveActualBackend(object $backend): ?object
     {
-        // Handle RemoteSynchronizedCache - extract remote backend
-        if ($backend instanceof RemoteSynchronizedCache) {
-            try {
-                $reflection = new ReflectionClass($backend);
-                // The property is named 'remote', not 'remoteBackend'
-                if ($reflection->hasProperty('remote')) {
-                    $remoteBackendProperty = $reflection->getProperty('remote');
-                    $backend = $remoteBackendProperty->getValue($backend);
-                }
-            } catch (ReflectionException $e) {
-                $this->logger->warning(
-                    'Failed to extract remote backend from RemoteSynchronizedCache: ' . $e->getMessage()
-                );
-                return null;
+        // RemoteSynchronizedCache (<= 2.4.8) and SymfonyL2Cache (2.4.9+) both keep the
+        // shared cache in a 'remote' property; on 2.4.9+ it is a frontend, not a backend
+        if ($backend instanceof RemoteSynchronizedCache || $backend instanceof SymfonyL2Cache) {
+            $remote = $this->getPropertyValue($backend, 'remote');
+            if ($remote instanceof FrontendInterface) {
+                $remote = $remote->getBackend();
             }
+
+            return is_object($remote) ? $this->resolveActualBackend($remote) : null;
+        }
+
+        // Symfony cache (2.4.9+): the tag adapter (e.g. RedisTagAdapter) holds the Redis client
+        if ($backend instanceof BackendWrapper) {
+            $adapter = $this->getPropertyValue($backend, 'adapter');
+
+            return is_object($adapter) && $this->isRedisBackend($adapter) ? $adapter : null;
         }
 
         // Check if backend is a recognized Redis backend
         if ($this->isRedisBackend($backend)) {
             return $backend;
+        }
+
+        return null;
+    }
+
+    /**
+     * Read a (possibly private) property from a wrapper object
+     *
+     * @param object $object
+     * @param string $propertyName
+     * @return mixed
+     */
+    private function getPropertyValue(object $object, string $propertyName): mixed
+    {
+        try {
+            $reflection = new ReflectionClass($object);
+            if ($reflection->hasProperty($propertyName)) {
+                return $reflection->getProperty($propertyName)->getValue($object);
+            }
+        } catch (ReflectionException $e) {
+            $this->logger->warning(
+                sprintf(
+                    'Failed to read property "%s" from "%s": %s',
+                    $propertyName,
+                    get_class($object),
+                    $e->getMessage()
+                )
+            );
         }
 
         return null;
